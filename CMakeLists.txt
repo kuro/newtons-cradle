@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.6)
+find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
+set(QT_USE_QTOPENGL 1)
+include(${QT_USE_FILE})
+subdirs(src)
