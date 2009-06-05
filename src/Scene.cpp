@@ -137,6 +137,51 @@ void Scene::paintGL ()
 
 }
 
+void Scene::mousePressEvent (QMouseEvent* evt)
+{
+    if (evt->modifiers() & Qt::AltModifier) {
+        drag_mode = DRAG_CAMERA;
+        return;
+    }
+
+    GLdouble x0, y0, z0, x1, y1, z1;
+    GLdouble model[16];
+    GLdouble proj[16];
+    GLint view[4];
+
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+    glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    glGetIntegerv(GL_VIEWPORT, view);
+
+    qreal proper_x = evt->posF().x();
+    qreal proper_y = view[3] - evt->posF().y() - 1;
+
+    gluUnProject(proper_x, proper_y, 0.0, model, proj, view, &x0, &y0, &z0);
+    gluUnProject(proper_x, proper_y, 1.0, model, proj, view, &x1, &y1, &z1);
+
+    btVector3 v0 (x0, y0, z0);
+    btVector3 v1 (x1, y1, z1);
+
+    btCollisionWorld::ClosestRayResultCallback ray_callback(v0, v1);
+    world->rayTest(v0, v1, ray_callback);
+    if (ray_callback.hasHit()) {
+        btRigidBody* body = btRigidBody::upcast(ray_callback.m_collisionObject);
+        if (body) {
+            body->setActivationState(ACTIVE_TAG);
+            btVector3 impulse = v1 - v0;
+            impulse.normalize();
+            float impulseStrength = 10.f;
+            impulse *= impulseStrength;
+            btVector3 relPos = ray_callback.m_hitPointWorld - body->getCenterOfMassPosition();
+            body->applyImpulse(impulse,relPos);
+        }
+
+        drag_mode = DRAG_BALL;
+    } else {
+        drag_mode = DRAG_CAMERA;
+    }
+}
+
 void Scene::mouseReleaseEvent (QMouseEvent* evt)
 {
     last_mouse_pos = QPointF();
@@ -151,12 +196,17 @@ void Scene::mouseMoveEvent (QMouseEvent* evt)
     QPointF diff = last_mouse_pos - evt->posF();
     last_mouse_pos = evt->posF();
 
-    zenith  += diff.y() * 0.01;
-    azimuth += diff.x() * 0.01;
-
-    zenith = qBound(static_cast<double>(FLT_MIN), zenith, pi - FLT_MIN);
-
-    updateGL();
+    switch (drag_mode) {
+    case DRAG_CAMERA:
+        zenith  += diff.y() * 0.01;
+        azimuth += diff.x() * 0.01;
+        zenith = qBound(static_cast<double>(FLT_MIN), zenith, pi - FLT_MIN);
+        updateGL();
+        break;
+    case DRAG_BALL:
+        /// @todo INSERT MAGIC HERE
+        break;
+    }
 }
 
 void Scene::wheelEvent (QWheelEvent* evt)

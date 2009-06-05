@@ -27,6 +27,7 @@ protected:
     void resizeGL (int w, int h);
     void paintGL ();
 
+    void mousePressEvent (QMouseEvent* evt);
     void mouseReleaseEvent (QMouseEvent* evt);
     void mouseMoveEvent (QMouseEvent* evt);
     void wheelEvent (QWheelEvent* evt);
@@ -53,4 +54,10 @@ protected:
     btSequentialImpulseConstraintSolver* solver;
 
     QList<Ball*> balls;
+
+    enum {
+        DRAG_CAMERA,
+        DRAG_BALL
+    };
+    int drag_mode;
 };
