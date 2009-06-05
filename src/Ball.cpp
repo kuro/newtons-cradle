@@ -48,6 +48,9 @@ Ball::Ball (Scene* scene, int index, int ball_count) :
     btRigidBody::btRigidBodyConstructionInfo con_info
         (mass, motion_state, shape, inertia);
 
+    con_info.m_restitution = 0.9;
+    con_info.m_linearSleepingThreshold = 0.0;
+
     rigid_body = new btRigidBody(con_info);
 
     scene->world->addRigidBody(rigid_body);
