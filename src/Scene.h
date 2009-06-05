@@ -2,6 +2,15 @@
 #pragma once
 
 #include <QGLWidget>
+#include <QTimer>
+
+class Ball;
+
+class btAxisSweep3;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
 
 class Scene : public QGLWidget
 {
@@ -12,6 +21,8 @@ public:
     virtual ~Scene ();
 
 protected:
+    void init_physics ();
+
     void initializeGL ();
     void resizeGL (int w, int h);
     void paintGL ();
@@ -20,11 +31,26 @@ protected:
     void mouseMoveEvent (QMouseEvent* evt);
     void wheelEvent (QWheelEvent* evt);
 
-    QPointF last_mouse_pos;
+protected slots:
+    void update ();
+
+public:
+    btDiscreteDynamicsWorld* world;
 
 protected:
+    qreal dt;
+
+    QPointF last_mouse_pos;
     qreal distance;
     qreal zenith;
     qreal azimuth;
 
+    QTimer timer;
+
+    btAxisSweep3* broadphase;
+    btDefaultCollisionConfiguration* collisionConfiguration;
+    btCollisionDispatcher* dispatcher;
+    btSequentialImpulseConstraintSolver* solver;
+
+    QList<Ball*> balls;
 };
