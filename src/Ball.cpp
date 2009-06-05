@@ -29,7 +29,7 @@ void Ball::deinit ()
     delete shape;
 }
 
-Ball::Ball (Scene* scene, int index) :
+Ball::Ball (Scene* scene, int index, int ball_count) :
     scene(scene),
     rigid_body(NULL)
 {
@@ -38,9 +38,12 @@ Ball::Ball (Scene* scene, int index) :
 
     shape->calculateLocalInertia(mass, inertia);
 
+    qreal x = index * radius * 2;
+    x += radius - (radius * ball_count);
+
     btDefaultMotionState* motion_state =
         new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1),
-                                 btVector3(index * radius * 2, 0, 0)));
+                                 btVector3(x, 0, 0)));
 
     btRigidBody::btRigidBodyConstructionInfo con_info
         (mass, motion_state, shape, inertia);

@@ -16,7 +16,7 @@ public:
     static void deinit ();
 
 public:
-    Ball (Scene* scene, int index);
+    Ball (Scene* scene, int index, int ball_count);
     ~Ball ();
 
     void draw ();

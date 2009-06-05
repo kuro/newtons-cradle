@@ -80,8 +80,9 @@ void Scene::initializeGL ()
     init_physics();
     Ball::init();
 
-    for (int i = 0; i < 5; i++) {
-        balls << new Ball(this, i);
+    int count = 5;
+    for (int i = 0; i < count; i++) {
+        balls << new Ball(this, i, count);
     }
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -125,12 +126,9 @@ void Scene::paintGL ()
               0.0,  0.0,  0.0,
               0.0,  1.0,  0.0);
 
-    glPushMatrix();
-    glTranslatef(Ball::radius - (Ball::radius * balls.size()), 0, 0);
     foreach (Ball* ball, balls) {
         ball->draw();
     }
-    glPopMatrix();
 
     GLuint gl_error = glGetError();
     if (gl_error != GL_NO_ERROR) {
