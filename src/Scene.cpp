@@ -131,7 +131,7 @@ void Scene::initializeGL ()
     splash->showMessage("loading environment map", Qt::AlignLeft, Qt::cyan);
     qApp->processEvents();
 
-    glEnable(GL_TEXTURE_CUBE_MAP);
+    glEnable(GL_TEXTURE_CUBE_MAP_ARB);
     cubemap = new CubeMap("media:cubemaps/SwedishRoyalCastle.exr");
 
     ready = true;

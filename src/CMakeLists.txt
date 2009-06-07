@@ -27,6 +27,7 @@ include_directories(
 
 if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DOPENEXR_DLL)
 endif ()
 
 add_executable(cradle ${sources} ${headers} ${ui_files} ${res_files})
