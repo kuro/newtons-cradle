@@ -19,6 +19,15 @@
 
 #include <QtDebug>
 
+#define GL_ERR_CHECK()                                                  \
+    do {                                                                \
+        GLuint gl_error = glGetError();                                 \
+            if (gl_error != GL_NO_ERROR) {                              \
+                qFatal("OpenGL Error @ %s:%d: %s",                      \
+                        __FILE__, __LINE__, gluErrorString(gl_error));  \
+            }                                                           \
+    } while (0)
+
 const qreal pi = 4.0 * atan(1.0);
 
 extern QSplashScreen* splash;
@@ -123,16 +132,13 @@ void Scene::initializeGL ()
 
     timer.start(1);
 
-    GLuint gl_error = glGetError();
-    if (gl_error != GL_NO_ERROR) {
-        qFatal("OpenGL Error: %s", gluErrorString(gl_error));
-    }
-
     splash->showMessage("loading environment map", Qt::AlignLeft, Qt::cyan);
     qApp->processEvents();
 
     glEnable(GL_TEXTURE_CUBE_MAP_ARB);
     cubemap = new CubeMap("media:cubemaps/SwedishRoyalCastle.exr");
+
+    GL_ERR_CHECK();
 
     ready = true;
 }
@@ -183,11 +189,7 @@ void Scene::paintGL ()
     cgGLDisableProfile(Ball::cg.vertex_profile);
     cgGLDisableProfile(Ball::cg.fragment_profile);
 
-    GLuint gl_error = glGetError();
-    if (gl_error != GL_NO_ERROR) {
-        qFatal("OpenGL Error: %s", gluErrorString(gl_error));
-    }
-
+    GL_ERR_CHECK();
 }
 
 void Scene::mousePressEvent (QMouseEvent* evt)
