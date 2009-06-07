@@ -1,11 +1,18 @@
 
+#include <GL/glew.h>
+
 #include "Scene.moc"
 #include "Ball.h"
+#include "CubeMap.h"
 
 #include <QMouseEvent>
 #include <QTime>
+#include <QSplashScreen>
+#include <QCoreApplication>
 
 #include <btBulletDynamicsCommon.h>
+
+#include <Cg/cgGL.h>
 
 #include <math.h>
 #include <float.h>
@@ -13,6 +20,8 @@
 #include <QtDebug>
 
 const qreal pi = 4.0 * atan(1.0);
+
+extern QSplashScreen* splash;
 
 #define ZNEAR 0.1
 #define ZFAR 100.0
@@ -26,6 +35,7 @@ inline void exp_mov_avg (T& avg, const T& new_val, const qreal& n)
 }
 
 Scene::Scene () :
+    ready(false),
     dt(1.0/60.0),
     distance(10.0),
     zenith(pi/2.0),
@@ -77,6 +87,22 @@ void Scene::init_physics ()
 
 void Scene::initializeGL ()
 {
+    static bool once = false;
+
+    // calling processEvents() results in initializeGL() being called again
+    if (once) {
+        return;
+    }
+    once = true;
+
+    splash->showMessage("initializing", Qt::AlignLeft, Qt::cyan);
+    qApp->processEvents();
+
+    glewInit();
+
+    splash->showMessage("physics", Qt::AlignLeft, Qt::cyan);
+    qApp->processEvents();
+
     init_physics();
     Ball::init();
 
@@ -85,10 +111,15 @@ void Scene::initializeGL ()
         balls << new Ball(this, i, count);
     }
 
+    splash->showMessage("graphics", Qt::AlignLeft, Qt::cyan);
+    qApp->processEvents();
+
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // wireframe
+    //glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_BACK, GL_LINE);  // wireframe
 
     timer.start(1);
 
@@ -97,6 +128,13 @@ void Scene::initializeGL ()
         qFatal("OpenGL Error: %s", gluErrorString(gl_error));
     }
 
+    splash->showMessage("loading environment map", Qt::AlignLeft, Qt::cyan);
+    qApp->processEvents();
+
+    glEnable(GL_TEXTURE_CUBE_MAP);
+    cubemap = new CubeMap("SwedishRoyalCastle.exr");
+
+    ready = true;
 }
 
 void Scene::resizeGL (int w, int h)
@@ -110,6 +148,10 @@ void Scene::resizeGL (int w, int h)
 
 void Scene::paintGL ()
 {
+    if (!ready) {
+        return;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -120,15 +162,26 @@ void Scene::paintGL ()
     qreal sin_a = sin(-azimuth);
     qreal cos_a = cos(-azimuth);
 
-    gluLookAt(distance * sin_z * cos_a,
-              distance * cos_z,
-              distance * sin_z * sin_a,
+    qreal cam_x = distance * sin_z * cos_a;
+    qreal cam_y = distance * cos_z        ;
+    qreal cam_z = distance * sin_z * sin_a;
+
+    gluLookAt(cam_x, cam_y, cam_z,
               0.0,  0.0,  0.0,
               0.0,  1.0,  0.0);
+
+    cgGLEnableProfile(Ball::cg.vertex_profile);
+    cgGLEnableProfile(Ball::cg.fragment_profile);
+    cgGLBindProgram(Ball::cg.program);
+
+    cgSetParameter3f(Ball::cg.eye, cam_x, cam_y, cam_z);
 
     foreach (Ball* ball, balls) {
         ball->draw();
     }
+
+    cgGLDisableProfile(Ball::cg.vertex_profile);
+    cgGLDisableProfile(Ball::cg.fragment_profile);
 
     GLuint gl_error = glGetError();
     if (gl_error != GL_NO_ERROR) {
@@ -170,7 +223,7 @@ void Scene::mousePressEvent (QMouseEvent* evt)
             body->setActivationState(ACTIVE_TAG);
             btVector3 impulse = v1 - v0;
             impulse.normalize();
-            float impulseStrength = 10.f;
+            float impulseStrength = 50.f;
             impulse *= impulseStrength;
             btVector3 relPos = ray_callback.m_hitPointWorld - body->getCenterOfMassPosition();
             body->applyImpulse(impulse,relPos);

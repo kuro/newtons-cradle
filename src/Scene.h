@@ -5,12 +5,15 @@
 #include <QTimer>
 
 class Ball;
+class CubeMap;
 
 class btAxisSweep3;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
+
+class QSplashScreen;
 
 class Scene : public QGLWidget
 {
@@ -39,6 +42,7 @@ public:
     btDiscreteDynamicsWorld* world;
 
 protected:
+    bool ready;
     qreal dt;
 
     QPointF last_mouse_pos;
@@ -60,4 +64,6 @@ protected:
         DRAG_BALL
     };
     int drag_mode;
+
+    CubeMap* cubemap;
 };

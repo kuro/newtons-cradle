@@ -1,0 +1,32 @@
+
+void main_vp (
+        uniform matrix mvp : state.matrix.mvp,
+        uniform matrix mv : state.matrix.modelview,
+        uniform matrix mvit : state.matrix.modelview.invtrans,
+
+        uniform float3 eye,
+
+        float4 v_position : POSITION,
+        float3 v_normal : NORMAL,
+
+        out float4 out_position : POSITION,
+        out float3 R : TEXCOORD1
+        )
+{
+    out_position = mul(mvp, v_position);
+
+    float3 world_position = mul(mv, v_position).xyz;
+    float3 world_normal = normalize(mul((float3x3)mvit, v_normal));
+
+    float3 I = world_position - eye;
+    R = reflect(I, world_normal);
+}
+
+float4 main_fp (
+        float3 R : TEXCOORD1,
+        uniform samplerCUBE env : TEXUNIT0
+        ) : COLOR
+{
+    float4 reflection = texCUBE(env, R);
+    return reflection;
+}

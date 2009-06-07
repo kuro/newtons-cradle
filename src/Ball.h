@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QObject>
+#include <Cg/cg.h>
 
 class Scene;
 
@@ -27,8 +28,20 @@ protected:
     static btCollisionShape* shape;
     static quint32 dlist;
 
+    static struct cg
+    {
+        CGcontext context;
+        CGprofile vertex_profile;
+        CGprofile fragment_profile;
+        CGprogram program;
+        CGparameter eye;
+    } cg;
+
+
 protected:
     Scene* scene;
     btHingeConstraint* hinge;
     btRigidBody* rigid_body;
+
+    friend class Scene;
 };
