@@ -4,6 +4,7 @@ qt4_add_resources(res_files cradle.qrc)
 set(headers
     Ball.h
     CubeMap.h
+    EXRStream.h
     Scene.h
     )
 
@@ -11,6 +12,7 @@ set(sources
     main.cpp
     Ball.cpp
     CubeMap.cpp
+    EXRStream.cpp
     Scene.cpp
     )
 

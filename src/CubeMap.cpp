@@ -1,5 +1,6 @@
 
 #include "CubeMap.h"
+#include "EXRStream.h"
 
 #include <GL/glew.h>
 
@@ -8,6 +9,8 @@
 #include <ImfEnvmap.h>
 
 #include <QCoreApplication>
+#include <QFile>
+
 #include <QtDebug>
 
 using namespace Imf;
@@ -28,7 +31,11 @@ using namespace Imath;
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    TiledRgbaInputFile file (qPrintable(fname));
+    QFile io (fname);
+    io.open(QIODevice::ReadOnly);
+    EXRStream exr_stream (&io, fname);
+
+    TiledRgbaInputFile file (exr_stream);
     Box2i dw;
     int w, h;
     Array2D<Rgba> hpix;

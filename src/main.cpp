@@ -8,6 +8,7 @@
 
 #include <ImfThreading.h>
 #include <QThread>
+#include <QDir>
 
 QSplashScreen* splash = NULL;
 
@@ -19,6 +20,8 @@ void cg_error_handler (CGcontext, CGerror error, void* appdata)
 int main (int argc, char** argv)
 {
     QApplication app (argc, argv);
+
+    QDir::addSearchPath("media", "../trunk/media");
 
     Imf::setGlobalThreadCount(QThread::idealThreadCount());
 

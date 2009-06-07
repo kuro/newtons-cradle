@@ -132,7 +132,7 @@ void Scene::initializeGL ()
     qApp->processEvents();
 
     glEnable(GL_TEXTURE_CUBE_MAP);
-    cubemap = new CubeMap("SwedishRoyalCastle.exr");
+    cubemap = new CubeMap("media:cubemaps/SwedishRoyalCastle.exr");
 
     ready = true;
 }
