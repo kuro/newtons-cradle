@@ -4,6 +4,8 @@
 #include <QGLWidget>
 #include <QTimer>
 
+#include <Cg/cg.h>
+
 class Ball;
 class CubeMap;
 
@@ -41,6 +43,13 @@ protected slots:
 public:
     btDiscreteDynamicsWorld* world;
 
+    struct cg
+    {
+        CGcontext context;
+        CGprofile vertex_profile;
+        CGprofile fragment_profile;
+    } cg;
+
 protected:
     bool ready;
     qreal dt;
@@ -66,4 +75,8 @@ protected:
     int drag_mode;
 
     CubeMap* cubemap;
+    GLuint sky_dlist;
+
+
+    CGprogram sky_program;
 };

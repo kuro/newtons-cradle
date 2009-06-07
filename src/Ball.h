@@ -13,7 +13,7 @@ class btHingeConstraint;
 class Ball
 {
 public:
-    static void init ();
+    static void init (Scene* scene);
     static void deinit ();
 
 public:
@@ -30,9 +30,6 @@ protected:
 
     static struct cg
     {
-        CGcontext context;
-        CGprofile vertex_profile;
-        CGprofile fragment_profile;
         CGprogram program;
         CGparameter eye;
     } cg;

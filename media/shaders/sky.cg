@@ -1,0 +1,21 @@
+
+void main_vp (
+        float4 mpos : POSITION,
+        uniform matrix mvp : state.matrix.mvp,
+        out float4 opos : POSITION,
+        out float3 vpos : TEXCOORD0
+        )
+{
+    opos = mul(mvp, mpos);
+    vpos = mpos;
+}
+
+float4 main_fp (
+        float3 pos : TEXCOORD0,
+        uniform samplerCUBE env : TEXTURE0
+        ) : COLOR
+{
+    float4 c;
+    c = texCUBE(env, pos);
+    return c;
+}

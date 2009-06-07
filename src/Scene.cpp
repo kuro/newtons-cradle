@@ -9,6 +9,7 @@
 #include <QTime>
 #include <QSplashScreen>
 #include <QCoreApplication>
+#include <QFile>
 
 #include <btBulletDynamicsCommon.h>
 
@@ -109,11 +110,21 @@ void Scene::initializeGL ()
 
     glewInit();
 
+    {
+        cg.context = cgCreateContext();
+        cg.vertex_profile = cgGLGetLatestProfile(CG_GL_VERTEX);
+        qDebug() << "vertex profile:" << cgGetProfileString(cg.vertex_profile);
+        cgGLSetOptimalOptions(cg.vertex_profile);
+        cg.fragment_profile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
+        qDebug() << "fragment profile:" << cgGetProfileString(cg.fragment_profile);
+        cgGLSetOptimalOptions(cg.fragment_profile);
+    }
+
     splash->showMessage("physics", Qt::AlignLeft, Qt::cyan);
     qApp->processEvents();
 
     init_physics();
-    Ball::init();
+    Ball::init(this);
 
     int count = 5;
     for (int i = 0; i < count; i++) {
@@ -127,9 +138,6 @@ void Scene::initializeGL ()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
 
-    //glEnable(GL_CULL_FACE);
-    glPolygonMode(GL_BACK, GL_LINE);  // wireframe
-
     timer.start(1);
 
     splash->showMessage("loading environment map", Qt::AlignLeft, Qt::cyan);
@@ -137,6 +145,30 @@ void Scene::initializeGL ()
 
     glEnable(GL_TEXTURE_CUBE_MAP_ARB);
     cubemap = new CubeMap("media:cubemaps/SwedishRoyalCastle.exr");
+
+    sky_dlist = glGenLists(1);
+    Q_ASSERT(glIsList(sky_dlist));
+    GLUquadric* quadric = gluNewQuadric();
+    glNewList(sky_dlist, GL_COMPILE);
+    gluSphere(quadric, 1, 3, 3);
+    glEndList();
+    gluDeleteQuadric(quadric);
+
+    {
+        QFile io (":media/shaders/sky.cg");
+        io.open(QIODevice::ReadOnly);
+        QByteArray source = io.readAll();
+
+        CGprogram vert_program, frag_program;
+        vert_program = cgCreateProgram(cg.context, CG_SOURCE, source,
+                cg.vertex_profile, "main_vp", NULL);
+        frag_program = cgCreateProgram(cg.context, CG_SOURCE, source,
+                cg.fragment_profile, "main_fp", NULL);
+        sky_program = cgCombinePrograms2(vert_program, frag_program);
+        cgDestroyProgram(vert_program);
+        cgDestroyProgram(frag_program);
+        cgGLLoadProgram(sky_program);
+    }
 
     GL_ERR_CHECK();
 
@@ -176,18 +208,31 @@ void Scene::paintGL ()
               0.0,  0.0,  0.0,
               0.0,  1.0,  0.0);
 
-    cgGLEnableProfile(Ball::cg.vertex_profile);
-    cgGLEnableProfile(Ball::cg.fragment_profile);
-    cgGLBindProgram(Ball::cg.program);
+    cgGLEnableProfile(cg.vertex_profile);
+    cgGLEnableProfile(cg.fragment_profile);
 
-    cgSetParameter3f(Ball::cg.eye, cam_x, cam_y, cam_z);
-
-    foreach (Ball* ball, balls) {
-        ball->draw();
+    {
+        glPolygonMode(GL_BACK, GL_FILL);
+        cgGLBindProgram(sky_program);
+        glDepthMask(GL_FALSE);
+        glPushMatrix();
+        glTranslatef(cam_x, cam_y, cam_z);
+        glCallList(sky_dlist);
+        glPopMatrix();
+        glDepthMask(GL_TRUE);
     }
 
-    cgGLDisableProfile(Ball::cg.vertex_profile);
-    cgGLDisableProfile(Ball::cg.fragment_profile);
+    {
+        glPolygonMode(GL_BACK, GL_LINE);
+        cgGLBindProgram(Ball::cg.program);
+        cgSetParameter3f(Ball::cg.eye, cam_x, cam_y, cam_z);
+        foreach (Ball* ball, balls) {
+            ball->draw();
+        }
+    }
+
+    cgGLDisableProfile(cg.vertex_profile);
+    cgGLDisableProfile(cg.fragment_profile);
 
     GL_ERR_CHECK();
 }

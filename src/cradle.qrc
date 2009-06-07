@@ -3,6 +3,7 @@
     <qresource>
         <file>../media/textures/flame.jpg</file>
         <file>../media/shaders/reflection.cg</file>
+        <file>../media/shaders/sky.cg</file>
     </qresource>
 </RCC>
 

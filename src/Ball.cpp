@@ -16,7 +16,7 @@ quint32 Ball::dlist = 0;
 
 struct Ball::cg Ball::cg;
 
-void Ball::init ()
+void Ball::init (Scene* scene)
 {
     shape = new btSphereShape(Ball::radius);
     Q_ASSERT(shape);
@@ -31,31 +31,19 @@ void Ball::init ()
 
 
 
+    // cg
     QFile io (":media/shaders/reflection.cg");
     io.open(QIODevice::ReadOnly);
     QByteArray source = io.readAll();
 
-    cg.context = cgCreateContext();
-
     CGprogram vert_program, frag_program;
-
-    cg.vertex_profile = cgGLGetLatestProfile(CG_GL_VERTEX);
-    qDebug() << "vertex profile:" << cgGetProfileString(cg.vertex_profile);
-    cgGLSetOptimalOptions(cg.vertex_profile);
-    vert_program = cgCreateProgram(cg.context, CG_SOURCE, source,
-                                   cg.vertex_profile, "main_vp", NULL);
-
-    cg.fragment_profile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
-    qDebug() << "fragment profile:" << cgGetProfileString(cg.fragment_profile);
-    cgGLSetOptimalOptions(cg.fragment_profile);
-    frag_program = cgCreateProgram(cg.context, CG_SOURCE, source,
-                                   cg.fragment_profile, "main_fp", NULL);
-
+    vert_program = cgCreateProgram(scene->cg.context, CG_SOURCE, source,
+                                   scene->cg.vertex_profile, "main_vp", NULL);
+    frag_program = cgCreateProgram(scene->cg.context, CG_SOURCE, source,
+                                   scene->cg.fragment_profile, "main_fp", NULL);
     cg.program = cgCombinePrograms2(vert_program, frag_program);
-
     cgDestroyProgram(vert_program);
     cgDestroyProgram(frag_program);
-
     cgGLLoadProgram(cg.program);
 
     cg.eye = cgGetNamedParameter(cg.program, "eye");
